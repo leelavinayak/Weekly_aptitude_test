@@ -66,9 +66,10 @@ if (process.env.NODE_ENV === 'production') {
     const clientPath = path.join(__dirname, '../client/dist');
     app.use(express.static(clientPath));
     
-    // Serve index.html for any non-API routes
+    // Serve index.html for any non-API routes (SPA fallback)
+    // We only serve index.html for routes that don't look like files (no dot in path)
     app.get('/:path*', (req, res, next) => {
-        if (!req.path.startsWith('/api')) {
+        if (!req.path.startsWith('/api') && !req.path.includes('.')) {
             res.sendFile(path.join(clientPath, 'index.html'));
         } else {
             next();
