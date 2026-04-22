@@ -73,10 +73,10 @@ if (process.env.NODE_ENV === 'production') {
         maxAge: '1d',
         etag: true
     }));
-    
+
     // Serve index.html for any non-API routes (SPA fallback)
     // We only serve index.html for routes that don't look like files (no dot in path)
-    app.get('/:path*', (req, res, next) => {
+    app.get('*', (req, res, next) => {
         if (!req.path.startsWith('/api') && !req.path.includes('.')) {
             res.sendFile(path.join(clientPath, 'index.html'));
         } else {
