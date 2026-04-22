@@ -1,5 +1,6 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
@@ -60,9 +61,24 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'UP', timestamp: new Date() });
 });
 
-app.get('/', (req, res) => {
-    res.send('Quiz app API is running...');
-});
+// Static files and SPA routing
+if (process.env.NODE_ENV === 'production') {
+    const clientPath = path.join(__dirname, '../client/dist');
+    app.use(express.static(clientPath));
+    
+    // Serve index.html for any non-API routes
+    app.get('*', (req, res, next) => {
+        if (!req.path.startsWith('/api')) {
+            res.sendFile(path.join(clientPath, 'index.html'));
+        } else {
+            next();
+        }
+    });
+} else {
+    app.get('/', (req, res) => {
+        res.send('Quiz app API is running...');
+    });
+}
 
 // 404 Handler
 app.use((req, res, next) => {
