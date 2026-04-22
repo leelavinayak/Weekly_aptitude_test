@@ -14,6 +14,10 @@ if (!process.env.SUPABASE_URL) {
 
 const app = express();
 
+// Production Security: Trust proxy (essential for Render/Heroku)
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
+
 // Database Connection check
 if (supabase) {
     console.log('Supabase client initialized');
@@ -64,7 +68,11 @@ app.get('/health', (req, res) => {
 // Static files and SPA routing
 if (process.env.NODE_ENV === 'production') {
     const clientPath = path.join(__dirname, '../client/dist');
-    app.use(express.static(clientPath));
+    // Serve static files with 1-day cache for performance
+    app.use(express.static(clientPath, {
+        maxAge: '1d',
+        etag: true
+    }));
     
     // Serve index.html for any non-API routes (SPA fallback)
     // We only serve index.html for routes that don't look like files (no dot in path)
@@ -98,7 +106,24 @@ app.use((err, req, res, next) => {
 
 // Port
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+});
+
+// Graceful Shutdown Handler
+process.on('SIGTERM', () => {
+    console.info('SIGTERM signal received: closing HTTP server');
+    server.close(() => {
+        console.log('HTTP server closed');
+        process.exit(0);
+    });
+});
+
+process.on('SIGINT', () => {
+    console.info('SIGINT signal received: closing HTTP server');
+    server.close(() => {
+        console.log('HTTP server closed');
+        process.exit(0);
+    });
 });
 
