@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 import { 
     LogOut, 
     User as UserIcon, 
@@ -22,6 +23,7 @@ const Navbar = () => {
     const location = useLocation();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     // Track scroll position to update navbar appearance
     useEffect(() => {
@@ -36,6 +38,23 @@ const Navbar = () => {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    const fetchUnreadCount = async () => {
+        if (!user) return;
+        try {
+            const { data } = await api.get('/notifications');
+            const unread = data.filter(n => !n.isRead).length;
+            setUnreadCount(unread);
+        } catch (err) {
+            console.error('Failed to fetch notifications', err);
+        }
+    };
+
+    useEffect(() => {
+        fetchUnreadCount();
+        const interval = setInterval(fetchUnreadCount, 30000); // Check every 30s
+        return () => clearInterval(interval);
+    }, [user]);
 
     const handleLogout = () => {
         logout();
@@ -136,7 +155,9 @@ const Navbar = () => {
                         {/* Notifications */}
                         <Link to="/notifications" className="relative p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50/80 rounded-2xl transition-all group active:scale-90">
                             <Bell size={22} className="group-hover:rotate-12 transition-transform duration-500" />
-                            <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white shadow-sm scale-110"></span>
+                            {unreadCount > 0 && (
+                                <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white shadow-sm scale-110"></span>
+                            )}
                         </Link>
 
                         <div className="hidden"></div>

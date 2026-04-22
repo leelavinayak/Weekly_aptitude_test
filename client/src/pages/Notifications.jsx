@@ -64,6 +64,17 @@ const Notifications = () => {
         }
     };
 
+    const handleClearAll = async () => {
+        if (!window.confirm('Are you sure you want to clear all notifications? This cannot be undone.')) return;
+        try {
+            await api.delete('/notifications/clear');
+            setNotifications([]);
+            toast.success('All notifications cleared');
+        } catch (err) {
+            toast.error('Failed to clear notifications');
+        }
+    };
+
     const getTypeIcon = (type) => {
         switch (type) {
             case 'success': return <CheckCircle2 className="text-green-500" size={20} />;
@@ -92,6 +103,15 @@ const Notifications = () => {
                     <p className="text-slate-500 mt-4 text-lg font-medium">Keep track of your academic alerts and system logs.</p>
                 </div>
                 <div className="flex items-center gap-3">
+                    {notifications.length > 0 && (
+                        <button 
+                            onClick={handleClearAll}
+                            className="flex items-center space-x-2 bg-red-50 text-red-600 px-4 py-2 rounded-2xl border border-red-100 hover:bg-red-600 hover:text-white transition-all text-xs font-black uppercase tracking-widest"
+                        >
+                            <Trash2 size={16} />
+                            <span>Clear History</span>
+                        </button>
+                    )}
                     {unreadCount > 0 && (
                         <button 
                             onClick={markAllRead}

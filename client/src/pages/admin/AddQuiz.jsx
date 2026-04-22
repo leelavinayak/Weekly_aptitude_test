@@ -59,8 +59,14 @@ const AddQuiz = () => {
     const handleUpload = async (isInstant) => {
         setLoading(true);
         try {
-            let finalScheduledAt = isInstant ? new Date().toISOString() : quizData.scheduledAt;
-            let finalEndTime = quizData.endTime;
+            // Convert local datetime-local strings to UTC ISO strings for backend consistency
+            let finalScheduledAt = isInstant 
+                ? new Date().toISOString() 
+                : (quizData.scheduledAt ? new Date(quizData.scheduledAt).toISOString() : null);
+            
+            let finalEndTime = quizData.endTime 
+                ? new Date(quizData.endTime).toISOString() 
+                : null;
 
             // If no specific end time is chosen but expiryHours are set, calculate it
             if (!finalEndTime && quizData.expiryHours) {
@@ -73,8 +79,8 @@ const AddQuiz = () => {
 
             await api.post('/admin/quiz/upload', {
                 ...quizData,
-                scheduledAt: finalScheduledAt || null,
-                endTime: finalEndTime || null
+                scheduledAt: finalScheduledAt,
+                endTime: finalEndTime
             });
             toast.success('Quiz Published successfully!');
             navigate('/admin/dashboard');

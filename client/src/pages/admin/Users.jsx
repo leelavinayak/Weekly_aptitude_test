@@ -198,14 +198,17 @@ const UserManagement = () => {
                         {paginatedStudents.map((student) => (
                                 <tr key={student._id} className="hover:bg-blue-50/30 transition-all duration-300 group">
                                     <td className="px-4 md:px-8 py-4 md:py-6">
-                                        <div className="flex items-center space-x-3">
-                                            <div className="w-9 h-9 md:w-12 md:h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black text-base md:text-lg shadow-lg shadow-blue-100 border border-blue-500 shrink-0">
+                                        <div 
+                                            className="flex items-center space-x-3 cursor-pointer group/student"
+                                            onClick={() => navigate(`/admin/student/${student._id}`)}
+                                        >
+                                            <div className="w-9 h-9 md:w-12 md:h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black text-base md:text-lg shadow-lg shadow-blue-100 border border-blue-500 shrink-0 group-hover/student:scale-110 transition-transform">
                                                 {student.profilePic ? (
                                                     <img src={student.profilePic} alt={student.name} className="w-full h-full rounded-xl object-cover" />
                                                 ) : student.name.charAt(0)}
                                             </div>
                                             <div>
-                                                <p className="font-black text-slate-800 text-sm tracking-tight">{student.name}</p>
+                                                <p className="font-black text-slate-800 text-sm tracking-tight group-hover/student:text-blue-600 transition-colors uppercase">{student.name}</p>
                                                 <p className="text-xs font-bold text-slate-400 mt-0.5 hidden sm:block">{student.email}</p>
                                             </div>
                                         </div>
@@ -235,6 +238,13 @@ const UserManagement = () => {
                                         <div className="flex items-center justify-end space-x-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button 
                                                 className="p-3 text-blue-600 hover:bg-blue-100 rounded-xl transition-all" 
+                                                title="View Performance"
+                                                onClick={() => navigate(`/admin/student/${student._id}`)}
+                                            >
+                                                <ExternalLink size={20} />
+                                            </button>
+                                            <button 
+                                                className="p-3 text-slate-600 hover:bg-slate-100 rounded-xl transition-all" 
                                                 title="Edit Student"
                                                 onClick={() => handleEditClick(student)}
                                             >

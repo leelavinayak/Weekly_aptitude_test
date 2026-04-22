@@ -1,6 +1,6 @@
 const supabase = require('../config/supabase');
 const { generateQuizQuestions } = require('../services/quizGenerator');
-const { notifyAllStudents } = require('../services/notificationService');
+const { notifyAllStudents, notify } = require('../services/notificationService');
 const templates = require('../utils/emailTemplates');
 
 // @desc    Generate quiz questions via AI
@@ -46,11 +46,24 @@ const createQuiz = async (req, res) => {
             .single();
 
         if (error) throw error;
+        
+        // Notify the Admin (Confirmation)
+        await notify(
+            req.user.id, 
+            'success', 
+            'Quiz Created', 
+            `You have successfully ${scheduledAt ? 'scheduled' : 'published'} "${title}".`
+        );
 
         // Notify All Students
+        const isFuture = scheduledAt && new Date(scheduledAt) > new Date();
+        const notificationMessage = isFuture 
+            ? `A new quiz "${title}" has been scheduled for ${new Date(scheduledAt).toLocaleString()}.`
+            : `A new quiz "${title}" is now available for you.`;
+
         notifyAllStudents(
-            'New Assessment Published',
-            `A new quiz "${title}" is now available for you.`,
+            isFuture ? 'New Quiz Scheduled' : 'New Assessment Published',
+            notificationMessage,
             templates.getNewQuizTemplate(title, language)
         );
 
@@ -81,11 +94,10 @@ const getStudentQuizzes = async (req, res) => {
     try {
         const now = new Date().toISOString();
         
-        // Quizzes that are active within their time window
+        // Quizzes that haven't ended yet
         const { data: quizzes, error } = await supabase
             .from('quizzes')
             .select('*')
-            .or(`isLive.eq.true,scheduledAt.lte.${now},scheduledAt.is.null`)
             .or(`endTime.gte.${now},endTime.is.null`)
             .order('createdAt', { ascending: false });
 

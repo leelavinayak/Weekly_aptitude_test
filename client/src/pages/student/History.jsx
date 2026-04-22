@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
-import { 
-    Clock, 
-    Trophy, 
-    Calendar, 
-    ChevronRight, 
+import {
+    Clock,
+    Trophy,
+    Calendar,
+    ChevronRight,
     Loader2,
     Search,
     Filter
@@ -54,8 +54,8 @@ const MyHistory = () => {
                     {user.role === 'admin' && (
                         <div className="bg-white px-6 py-2 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-3">
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Limit:</span>
-                            <select 
-                                value={limit} 
+                            <select
+                                value={limit}
                                 onChange={(e) => setLimit(e.target.value)}
                                 className="bg-transparent border-none font-black text-blue-600 focus:ring-0 text-xs cursor-pointer"
                             >
@@ -71,7 +71,7 @@ const MyHistory = () => {
                         <div className="text-right">
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Average Score</p>
                             <p className="text-lg font-black text-slate-800">
-                                {attempts.length > 0 
+                                {attempts.length > 0
                                     ? Math.round(attempts.reduce((acc, curr) => acc + curr.percentage, 0) / attempts.length)
                                     : 0}%
                             </p>
@@ -82,8 +82,8 @@ const MyHistory = () => {
 
             <div className="space-y-6 stagger-children">
                 {attempts.map((attempt) => (
-                    <div 
-                        key={attempt._id} 
+                    <div
+                        key={attempt._id}
                         onClick={() => {
                             if (user.role === 'admin') {
                                 navigate(`/admin/review-attempt/${attempt._id}`);
@@ -94,7 +94,7 @@ const MyHistory = () => {
                         className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-50 transition-all duration-500 group cursor-pointer relative overflow-hidden animate-fade-in"
                     >
                         <div className={`absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-[0.03] transition-transform duration-700 group-hover:scale-150 ${attempt.status === 'pass' ? 'bg-green-600' : 'bg-red-600'}`}></div>
-                        
+
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
                             <div className="flex items-center space-x-6">
                                 <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-transform group-hover:-rotate-6 ${attempt.status === 'pass' ? 'bg-green-600 shadow-green-100' : 'bg-red-600 shadow-red-100'}`}>
@@ -102,6 +102,16 @@ const MyHistory = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-black text-slate-800 tracking-tight group-hover:text-blue-600 transition-colors uppercase text-sm mb-1">{attempt.quizId?.title}</h3>
+
+                                    {user.role === 'admin' && attempt.studentId && (
+                                        <div className="flex items-center space-x-2 mb-2 bg-slate-50 px-3 py-1 rounded-lg border border-slate-100 w-fit">
+                                            <div className="w-5 h-5 rounded-full bg-blue-600 text-[10px] flex items-center justify-center text-white font-black">
+                                                {attempt.studentId.name.charAt(0)}
+                                            </div>
+                                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{attempt.studentId.name}</span>
+                                        </div>
+                                    )}
+
                                     <div className="flex items-center space-x-4 text-slate-400 text-xs font-bold">
                                         <span className="flex items-center uppercase tracking-widest"><Calendar size={12} className="mr-1.5" /> {new Date(attempt.submittedAt).toLocaleDateString()}</span>
                                         <span className="flex items-center uppercase tracking-widest"><Clock size={12} className="mr-1.5" /> {Math.floor(attempt.timeTaken / 60)}m {attempt.timeTaken % 60}s</span>

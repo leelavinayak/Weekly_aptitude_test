@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
-import { 
-    Trophy, 
-    XCircle, 
-    CheckCircle2, 
-    Clock, 
-    ArrowLeft, 
+import {
+    Trophy,
+    XCircle,
+    CheckCircle2,
+    Clock,
+    ArrowLeft,
     Loader2,
     RefreshCcw,
     Zap
@@ -24,8 +24,8 @@ const ResultPage = () => {
                 const { data } = await api.get(`/student/results/${id}`);
                 setResult(data);
             } catch (err) {
-                alert('Failed to load result');
-                navigate('/');
+                console.error('Result load error:', err);
+                navigate('/student/home');
             } finally {
                 setLoading(false);
             }
@@ -43,8 +43,10 @@ const ResultPage = () => {
     );
 
     const isPass = result.status === 'pass';
-    const correctCount = result.quizId.questions.filter((q, i) => {
-        const studentAnswer = result.answers.find(a => a.questionId.toString() === q._id.toString())?.selectedAnswer;
+    const questions = result.quizId?.questions || [];
+    const correctCount = questions.filter((q, i) => {
+        const qId = q._id || q.id || i.toString();
+        const studentAnswer = result.answers?.find(a => a.questionId.toString() === qId.toString())?.selectedAnswer;
         return studentAnswer === q.correctAnswer;
     }).length;
 
@@ -93,7 +95,7 @@ const ResultPage = () => {
                 <h2 className="text-3xl font-black text-slate-800 flex items-center tracking-tight">
                     <Zap className="mr-3 text-blue-600" /> Performance Analysis
                 </h2>
-                <button 
+                <button
                     onClick={() => navigate('/student/home')}
                     className="flex items-center space-x-2 text-blue-600 font-black text-xs uppercase tracking-widest transition-all hover:translate-x-[-4px] group"
                 >
@@ -104,8 +106,9 @@ const ResultPage = () => {
 
             {/* Question Review List */}
             <div className="space-y-8 stagger-children">
-                {result.quizId.questions.map((q, i) => {
-                    const studentAnswer = result.answers.find(a => a.questionId.toString() === q._id.toString())?.selectedAnswer;
+                {questions.map((q, i) => {
+                    const qId = q._id || q.id || i.toString();
+                    const studentAnswer = result.answers?.find(a => a.questionId.toString() === qId.toString())?.selectedAnswer;
                     const isCorrect = studentAnswer === q.correctAnswer;
 
                     return (
@@ -129,7 +132,7 @@ const ResultPage = () => {
                                 {q.options.map((opt, idx) => {
                                     const isSelected = opt === studentAnswer;
                                     const isTruth = opt === q.correctAnswer;
-                                    
+
                                     let borderColor = 'border-slate-50';
                                     let bgColor = 'bg-slate-50/50';
                                     let textColor = 'text-slate-500';
@@ -145,8 +148,8 @@ const ResultPage = () => {
                                     }
 
                                     return (
-                                        <div 
-                                            key={idx} 
+                                        <div
+                                            key={idx}
                                             className={`p-5 rounded-2xl border-2 flex items-center transition-all ${borderColor} ${bgColor} ${textColor} ${isTruth || (isSelected && !isCorrect) ? 'font-black scale-[1.02]' : 'font-bold'}`}
                                         >
                                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-4 shrink-0 font-black ${isTruth ? 'bg-blue-600 text-white' : isSelected ? 'bg-red-600 text-white' : 'bg-white text-slate-300'}`}>
@@ -165,7 +168,7 @@ const ResultPage = () => {
             </div>
 
             <div className="mt-16 flex justify-center">
-                <button 
+                <button
                     onClick={() => navigate('/student/home')}
                     className="btn-blue py-5 px-16 text-xl flex items-center justify-center space-x-3"
                 >

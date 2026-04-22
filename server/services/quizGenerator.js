@@ -58,16 +58,33 @@ const generateMockQuestions = (language, numQuestions, difficulty) => {
         { q: "Which method removes the last element of an array?", o: ["pop()", "shift()", "remove()", "last()"], a: "pop()" },
         { q: "Equality operator that checks value and type?", o: ["===", "==", "=", "==!"], a: "===" },
         { q: "What is the DOM?", o: ["Document Object Model", "Data Object Model", "Digital Office Model", "None"], a: "Document Object Model" }
+    ],
+    react: [
+        { q: "Which hook is used for side effects in React?", o: ["useEffect", "useState", "useContext", "useMemo"], a: "useEffect" },
+        { q: "What is the virtual DOM?", o: ["A lightweight copy of the real DOM", "A direct manipulation of browser HTML", "A CSS styling engine", "A server-side rendering tool"], a: "A lightweight copy of the real DOM" },
+        { q: "How do you pass data from parent to child in React?", o: ["Props", "State", "Context", "Redux"], a: "Props" },
+        { q: "What is the purpose of 'key' prop in lists?", o: ["Help identify changed items", "Style the item", "Store the index", "Bind event handlers"], a: "Help identify changed items" }
+    ],
+    node: [
+        { q: "Which object is used to access command line arguments in Node?", o: ["process.argv", "sys.args", "os.params", "cmd.line"], a: "process.argv" },
+        { q: "What is the package manager for Node.js?", o: ["npm", "pip", "maven", "gem"], a: "npm" },
+        { q: "Which module is used to create a web server?", o: ["http", "fs", "path", "url"], a: "http" },
+        { q: "What is the default behavior of Node.js?", o: ["Single-threaded and Non-blocking", "Multi-threaded and Blocking", "Single-threaded and Blocking", "None of these"], a: "Single-threaded and Non-blocking" }
+    ],
+    sql: [
+        { q: "Which command is used to fetch data from a table?", o: ["SELECT", "GET", "FETCH", "EXTRACT"], a: "SELECT" },
+        { q: "What does SQL stand for?", o: ["Structured Query Language", "Strong Question Language", "Simple Query List", "None"], a: "Structured Query Language" },
+        { q: "Keyword used to remove duplicates in a result set?", o: ["DISTINCT", "UNIQUE", "DIFFERENT", "SINGLE"], a: "DISTINCT" },
+        { q: "Which clause is used to filter group results?", o: ["HAVING", "WHERE", "FILTER", "GROUP BY"], a: "HAVING" }
     ]
   };
 
   const generalTemplates = [
-    { q: "What is the primary purpose of ${language}?", o: ["Development", "Styling", "Testing", "Documentation"], a: "Development" },
-    { q: "Which of these is a valid best practice in ${language}?", o: ["Consistent naming", "No comments", "Writing large files", "Deep nesting"], a: "Consistent naming" },
-    { q: "In ${language}, what does 'compilation' or 'interpretation' do?", o: ["Converts code to machine readable format", "Deletes redundant files", "Formats the code", "None"], a: "Converts code to machine readable format" },
-    { q: "Which version of ${language} is most widely used today?", o: ["The latest stable version", "The first version", "The experimental version", "Beta version"], a: "The latest stable version" },
-    { q: "How do you typically handle debugging in ${language}?", o: ["Using a debugger tool", "Deleting the code", "Ignoring errors", "Restarting the OS"], a: "Using a debugger tool" },
-    { q: "What is a 'library' in ${language}?", o: ["A collection of pre-written code", "A place to study", "A hardware component", "A compiler option"], a: "A collection of pre-written code" }
+    { q: "What is a core architectural principle of ${language}?", o: ["Modularity", "Monolithic structure", "Linear execution", "No abstraction"], a: "Modularity" },
+    { q: "Which of these is a valid syntax convention in ${language}?", o: ["Indentation and clarity", "No whitespace", "Obfuscation", "Redundancy"], a: "Indentation and clarity" },
+    { q: "How does ${language} typically handle error management?", o: ["Exception handling", "Ignoring crashes", "Kernel panic", "None"], a: "Exception handling" },
+    { q: "What is the typical use case for ${language} in modern industry?", o: ["Scalable systems", "One-off scripts", "Legacy maintenance", "Manual documentation"], a: "Scalable systems" },
+    { q: "Which component is essential for running code written in ${language}?", o: ["Compiler or Runtime", "Graphics card", "Word processor", "Printer"], a: "Compiler or Runtime" }
   ];
 
   // Pick the pool
@@ -84,9 +101,10 @@ const generateMockQuestions = (language, numQuestions, difficulty) => {
   
   const result = [];
   for (let i = 0; i < numQuestions; i++) {
+    // For general templates, we need to inject the language name
     const item = shuffled[i % shuffled.length];
     result.push({
-      question: item.q.replace("${language}", language),
+      question: item.q.includes("${language}") ? item.q.replace(/\$\{language\}/g, language) : item.q,
       options: [...item.o],
       correctAnswer: item.a
     });
@@ -125,17 +143,25 @@ const generateQuizQuestions = async (language, numQuestions, difficulty = 'mediu
   };
   const difficultyDescription = difficultyMap[difficulty] || difficultyMap.medium;
 
-  const prompt = `
-    Generate ${numQuestions} multiple choice questions for a quiz on "${language}".
-    Difficulty Level: ${difficulty.toUpperCase()} — Questions should be ${difficultyDescription}.
+  const sessionSeed = Math.floor(Math.random() * 1000000);
     
-    CRITICAL INSTRUCTIONS:
-    - Return a raw JSON array only.
-    - Each object must have: "question", "options" (array of 4), and "correctAnswer" (matching string).
-    - DO NOT include markdown backticks (e.g., \`\`\`json).
-    - DO NOT include any text, greetings, or explanations.
-    - Strict JSON format is required for automated parsing.
-    - Diversity: Ensure questions are unique and cover different aspects of the topic.
+    const prompt = `
+    You are a professional instructor. Generate ${numQuestions} specialized multiple choice questions for a certification-level quiz on "${language}".
+    
+    Difficulty Level: ${difficulty.toUpperCase()} (${difficultyDescription}).
+    Session Unique ID: ${sessionSeed} (Ensure these questions are fresh and not identical to previous typical sets).
+    
+    GUIDELINES:
+    1. TOPIC RELEVANCE: Questions must be strictly focused on "${language}". Avoid generic filler questions. Focus on core syntax, architectural patterns, common pitfalls, and advanced features specific to "${language}".
+    2. NOVELTY: Explore various sub-topics within "${language}". Do not just stick to the most common introductory concepts.
+    3. TECHNICAL ACCURACY: Ensure every question has exactly one undeniably correct answer among the 4 options.
+    4. QUESTION VARIETY: Include a mix of conceptual questions, code-snippet analysis (if applicable), and real-world implementation scenarios.
+    5. DATA FORMAT: Return a raw JSON array only. Each object must have: "question", "options" (array of 4 strings), and "correctAnswer" (matching the exact string in options).
+    
+    STRICT CONSTRAINTS:
+    - NO markdown formatting (no \`\`\`json).
+    - NO preamble, no post-text, no greetings.
+    - JSON MUST BE PARSABLE.
   `;
 
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));

@@ -6,13 +6,12 @@ const { getQuizForAttempt, submitQuiz, getMyResults, getResultDetail } = require
 
 // Protect student routes
 router.use(protect);
-router.use(authorize('student'));
 
-router.get('/quizzes', getStudentQuizzes);
-router.get('/quiz/:id', getQuizForAttempt);
-router.post('/quiz/:id/submit', submitQuiz);
-router.get('/results', getMyResults);
-router.get('/results/:id', getResultDetail);
+router.get('/quizzes', authorize('student'), getStudentQuizzes);
+router.get('/quiz/:id', authorize('student'), getQuizForAttempt);
+router.post('/quiz/:id/submit', authorize('student'), submitQuiz);
+router.get('/results', authorize('student'), getMyResults);
+router.get('/results/:id', authorize('student', 'admin'), getResultDetail);
 // router.put('/profile', updateProfile); // Moved to global auth route
 
 module.exports = router;

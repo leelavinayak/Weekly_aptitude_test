@@ -24,6 +24,11 @@ const getQuizForAttempt = async (req, res) => {
             return res.status(400).json({ message: 'Quiz already attempted' });
         }
 
+        const now = new Date();
+        if (!quiz.isLive && quiz.scheduledAt && new Date(quiz.scheduledAt) > now) {
+            return res.status(400).json({ message: `This quiz is scheduled for ${new Date(quiz.scheduledAt).toLocaleString()} and cannot be started yet.` });
+        }
+
         notify(req.user.id, 'info', 'Quiz Started', `You have started "${quiz.title}".`, {
             html: templates.getAttemptStartedTemplate(quiz.title, req.user.name)
         });
@@ -96,6 +101,11 @@ const submitQuiz = async (req, res) => {
 
         if (error) throw error;
 
+        const mappedAttempt = {
+            ...attempt,
+            _id: attempt.id
+        };
+
         notify(req.user.id, status === 'pass' ? 'success' : 'warning', 'Assessment Finalized', `You completed "${quiz.title}" with a score of ${percentage}%.`, {
             html: templates.getQuizResultTemplate(quiz.title, req.user.name, score, Math.round(percentage), status)
         });
@@ -104,7 +114,7 @@ const submitQuiz = async (req, res) => {
             html: templates.getQuizResultTemplate(quiz.title, req.user.name, score, Math.round(percentage), status)
         });
 
-        res.status(201).json(attempt);
+        res.status(201).json(mappedAttempt);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -122,9 +132,16 @@ const getMyResults = async (req, res) => {
             .eq('studentId', req.user.id)
             .order('submittedAt', { ascending: false })
             .limit(limitValue);
-        
+
         if (error) throw error;
-        res.json(results);
+        
+        const mappedResults = results?.map(r => ({
+            ...r,
+            _id: r.id,
+            quizId: r.quizId ? { ...r.quizId, _id: r.quizId.id } : null
+        })) || [];
+
+        res.json(mappedResults);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -135,17 +152,25 @@ const getResultDetail = async (req, res) => {
     try {
         const { data: result, error } = await supabase
             .from('quiz_attempts')
-            .select('*, quizId:quizzes(title, language, questions)')
+            .select('*, quiz:quizzes(id, title, language, questions), student:users(id, name, email)')
             .eq('id', req.params.id)
             .single();
-        
+
         if (error || !result) return res.status(404).json({ message: 'Result not found' });
-        
+
+        // Map for frontend compatibility
+        const mappedResult = {
+            ...result,
+            _id: result.id,
+            quizId: result.quiz ? { ...result.quiz, _id: result.quiz.id } : null,
+            studentId: result.student ? { ...result.student, _id: result.student.id } : result.studentId
+        };
+
         if (result.studentId !== req.user.id && req.user.role !== 'admin') {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        res.json(result);
+        res.json(mappedResult);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -27,29 +27,35 @@ const getDashboardStats = async (req, res) => {
         // Quiz-wise average scores
         const { data: quizStatsRaw } = await supabase
             .from('quiz_attempts')
-            .select('quizId, percentage, quizzes(title)');
-        
+            .select('quizId, percentage, quiz:quizzes(title)');
+
         const quizStatsMap = {};
         quizStatsRaw?.forEach(a => {
-            const title = a.quizzes?.title || 'Unknown';
-            if (!quizStatsMap[title]) quizStatsMap[title] = { title, total: 0, count: 0 };
+            const title = a.quiz?.title || 'Unknown';
+            const quizId = a.quizId;
+            if (!quizStatsMap[title]) quizStatsMap[title] = { id: quizId, title, total: 0, count: 0 };
             quizStatsMap[title].total += a.percentage;
             quizStatsMap[title].count += 1;
         });
-        const quizStats = Object.values(quizStatsMap).map(q => ({ title: q.title, avgScore: q.total / q.count }));
+        const quizStats = Object.values(quizStatsMap).map(q => ({
+            id: q.id,
+            title: q.title,
+            avgScore: q.total / q.count
+        }));
 
-        // Recent activity feed
+        // Top attempts (highest score, lowest time)
         const { data: recentAttemptsRaw } = await supabase
             .from('quiz_attempts')
-            .select('*, studentId:users(id, name, email), quizId:quizzes(id, title)')
-            .order('submittedAt', { ascending: false })
-            .limit(5);
+            .select('*, student:users(id, name, email), quiz:quizzes(id, title)')
+            .order('percentage', { ascending: false })
+            .order('timeTaken', { ascending: true })
+            .limit(30);
 
         const recentAttempts = recentAttemptsRaw?.map(a => ({
             ...a,
             _id: a.id,
-            studentId: { ...a.studentId, _id: a.studentId.id },
-            quizId: { ...a.quizId, _id: a.quizId.id }
+            studentId: a.student ? { ...a.student, _id: a.student.id } : null,
+            quizId: a.quiz ? { ...a.quiz, _id: a.quiz.id } : null
         })) || [];
 
         res.json({
@@ -74,7 +80,7 @@ const getAllStudents = async (req, res) => {
             .from('users')
             .select('*')
             .eq('role', 'student');
-        
+
         if (error) throw error;
 
         const enhancedStudents = await Promise.all(students.map(async (student) => {
@@ -83,10 +89,10 @@ const getAllStudents = async (req, res) => {
                 .select('percentage')
                 .eq('studentId', student.id);
 
-            const avgScore = (attempts && attempts.length > 0) 
-                ? attempts.reduce((acc, curr) => acc + curr.percentage, 0) / attempts.length 
+            const avgScore = (attempts && attempts.length > 0)
+                ? attempts.reduce((acc, curr) => acc + curr.percentage, 0) / attempts.length
                 : 0;
-            
+
             return {
                 ...student,
                 _id: student.id, // For frontend compatibility
@@ -106,7 +112,7 @@ const deleteStudent = async (req, res) => {
     try {
         const { error: attemptError } = await supabase.from('quiz_attempts').delete().eq('studentId', req.params.id);
         const { error: userError } = await supabase.from('users').delete().eq('id', req.params.id);
-        
+
         if (userError) throw userError;
         res.json({ message: 'User and all associated data deleted' });
     } catch (error) {
@@ -125,7 +131,7 @@ const getAllAttempts = async (req, res) => {
             .select('*, studentId:users(id, name, email), quizId:quizzes(id, title)')
             .order('submittedAt', { ascending: false })
             .limit(limitValue);
-            
+
         if (error) throw error;
 
         const attempts = attemptsRaw?.map(a => ({
@@ -161,7 +167,7 @@ const updateStudent = async (req, res) => {
             .single();
 
         if (error) throw error;
-        
+
         await notify(req.params.id, 'info', 'Profile Updated', 'An administrator has updated your profile details.');
         res.json(updatedStudent);
     } catch (error) {
@@ -176,19 +182,19 @@ const getStudentDetail = async (req, res) => {
 
         const { data: historyRaw } = await supabase
             .from('quiz_attempts')
-            .select('*, quizId:quizzes(id, title, language)')
+            .select('*, quiz:quizzes(id, title, language)')
             .eq('studentId', student.id)
             .order('submittedAt', { ascending: false });
 
         const history = historyRaw?.map(h => ({
             ...h,
             _id: h.id,
-            quizId: { ...h.quizId, _id: h.quizId.id }
+            quizId: h.quiz ? { ...h.quiz, _id: h.quiz.id } : null
         })) || [];
 
         const totalAttempts = history ? history.length : 0;
-        const avgScore = totalAttempts > 0 
-            ? history.reduce((acc, curr) => acc + curr.percentage, 0) / totalAttempts 
+        const avgScore = totalAttempts > 0
+            ? history.reduce((acc, curr) => acc + curr.percentage, 0) / totalAttempts
             : 0;
         const passRank = history ? history.filter(h => h.status === 'pass').length : 0;
 

@@ -60,4 +60,19 @@ const deleteNotification = async (req, res) => {
     }
 };
 
-module.exports = { getNotifications, markAsRead, deleteNotification };
+// @desc    Clear all notifications for user
+const clearAllNotifications = async (req, res) => {
+    try {
+        const { error } = await supabase
+            .from('notifications')
+            .delete()
+            .eq('userId', req.user.id);
+
+        if (error) throw error;
+        res.json({ message: 'All notifications cleared' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { getNotifications, markAsRead, deleteNotification, clearAllNotifications };
