@@ -5,26 +5,29 @@ const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
-const connectDB = require('./config/db');
+const supabase = require('./config/supabase');
 
-if (!process.env.MONGO_URI) {
-    console.error('CRITICAL: MONGO_URI is not defined in ../.env');
+if (!process.env.SUPABASE_URL) {
+    console.error('CRITICAL: SUPABASE_URL is not defined in ../.env');
 }
 
 const app = express();
 
-// Connect to Database
-connectDB();
+// Database Connection check
+if (supabase) {
+    console.log('Supabase client initialized');
+}
+
 
 // Production Middleware
 app.use(helmet()); // Security headers
 app.use(compression()); // Compress responses
 app.use(morgan('combined')); // Production logging
 
-// Rate Limiting
+// Rate Limiting (Generous for development)
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    max: process.env.NODE_ENV === 'production' ? 100 : 1000, // 1000 requests per 15 min in dev
     message: 'Too many requests from this IP, please try again after 15 minutes'
 });
 app.use('/api/', limiter);

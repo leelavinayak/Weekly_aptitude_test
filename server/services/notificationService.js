@@ -1,7 +1,6 @@
-const Notification = require('../models/Notification');
+const supabase = require('../config/supabase');
 const sendEmail = require('./emailService');
 const templates = require('../utils/emailTemplates');
-const User = require('../models/User');
 
 /**
  * Unified Notification Service
@@ -10,15 +9,20 @@ const User = require('../models/User');
 const notify = async (userId, type, title, message, emailOptions = null) => {
     try {
         // 1. Create In-App Notification
-        await Notification.create({
+        await supabase.from('notifications').insert([{
             userId,
             type: type || 'info',
             message: `${title}: ${message}`
-        });
+        }]);
 
         // 2. Send Email if options provided
         if (emailOptions) {
-            const user = await User.findById(userId);
+            const { data: user } = await supabase
+                .from('users')
+                .select('email')
+                .eq('id', userId)
+                .single();
+
             if (user && user.email) {
                 await sendEmail({
                     email: user.email,
@@ -39,26 +43,31 @@ const notify = async (userId, type, title, message, emailOptions = null) => {
  */
 const notifyAllStudents = async (title, message, emailHtml = null) => {
     try {
-        const students = await User.find({ role: 'student' });
+        const { data: students } = await supabase
+            .from('users')
+            .select('*')
+            .eq('role', 'student');
         
-        const notifications = students.map(student => ({
-            userId: student._id,
-            type: 'info',
-            message: `${title}: ${message}`
-        }));
+        if (students && students.length > 0) {
+            const notifications = students.map(student => ({
+                userId: student.id,
+                type: 'info',
+                message: `${title}: ${message}`
+            }));
 
-        // Bulk insert DB notifications
-        await Notification.insertMany(notifications);
+            // Bulk insert DB notifications
+            await supabase.from('notifications').insert(notifications);
 
-        // Send emails (Warning: Instant blast, might need queuing for large sets)
-        if (emailHtml) {
-            for (const student of students) {
-                sendEmail({
-                    email: student.email,
-                    subject: title,
-                    message: message,
-                    html: emailHtml
-                }).catch(err => console.error(`Email failed for ${student.email}:`, err.message));
+            // Send emails (Warning: Instant blast, might need queuing for large sets)
+            if (emailHtml) {
+                for (const student of students) {
+                    sendEmail({
+                        email: student.email,
+                        subject: title,
+                        message: message,
+                        html: emailHtml
+                    }).catch(err => console.error(`Email failed for ${student.email}:`, err.message));
+                }
             }
         }
     } catch (error) {

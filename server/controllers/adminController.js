@@ -1,58 +1,62 @@
-const User = require('../models/User');
-const Quiz = require('../models/Quiz');
-const QuizAttempt = require('../models/QuizAttempt');
+const supabase = require('../config/supabase');
 const { notify } = require('../services/notificationService');
 
 // @desc    Get dashboard stats
-// @route   GET /api/admin/dashboard
-// @access  Private/Admin
 const getDashboardStats = async (req, res) => {
     try {
-        const totalStudents = await User.countDocuments({ role: 'student' });
-        const totalQuizzes = await Quiz.countDocuments();
-        const totalAttempts = await QuizAttempt.countDocuments();
-        
-        const attempts = await QuizAttempt.find({});
-        const passAttempts = attempts.filter(a => a.status === 'pass').length;
+        const { count: totalStudents } = await supabase
+            .from('users')
+            .select('*', { count: 'exact', head: true })
+            .eq('role', 'student');
+
+        const { count: totalQuizzes } = await supabase
+            .from('quizzes')
+            .select('*', { count: 'exact', head: true });
+
+        const { count: totalAttempts } = await supabase
+            .from('quiz_attempts')
+            .select('*', { count: 'exact', head: true });
+
+        const { data: attempts } = await supabase
+            .from('quiz_attempts')
+            .select('status, percentage');
+
+        const passAttempts = attempts ? attempts.filter(a => a.status === 'pass').length : 0;
         const passRate = totalAttempts > 0 ? (passAttempts / totalAttempts) * 100 : 0;
 
-        // Quiz-wise average scores for bar chart
-        const quizStats = await QuizAttempt.aggregate([
-            {
-                $group: {
-                    _id: "$quizId",
-                    avgScore: { $avg: "$percentage" }
-                }
-            },
-            {
-                $lookup: {
-                    from: "quizzes",
-                    localField: "_id",
-                    foreignField: "_id",
-                    as: "quizDetails"
-                }
-            },
-            { $unwind: "$quizDetails" },
-            {
-                $project: {
-                    title: "$quizDetails.title",
-                    avgScore: 1
-                }
-            }
-        ]);
+        // Quiz-wise average scores
+        const { data: quizStatsRaw } = await supabase
+            .from('quiz_attempts')
+            .select('quizId, percentage, quizzes(title)');
+        
+        const quizStatsMap = {};
+        quizStatsRaw?.forEach(a => {
+            const title = a.quizzes?.title || 'Unknown';
+            if (!quizStatsMap[title]) quizStatsMap[title] = { title, total: 0, count: 0 };
+            quizStatsMap[title].total += a.percentage;
+            quizStatsMap[title].count += 1;
+        });
+        const quizStats = Object.values(quizStatsMap).map(q => ({ title: q.title, avgScore: q.total / q.count }));
 
         // Recent activity feed
-        const recentAttempts = await QuizAttempt.find()
-            .populate('studentId', 'name email')
-            .populate('quizId', 'title')
-            .sort({ percentage: -1, timeTaken: 1, submittedAt: -1 })
+        const { data: recentAttemptsRaw } = await supabase
+            .from('quiz_attempts')
+            .select('*, studentId:users(id, name, email), quizId:quizzes(id, title)')
+            .order('submittedAt', { ascending: false })
             .limit(5);
+
+        const recentAttempts = recentAttemptsRaw?.map(a => ({
+            ...a,
+            _id: a.id,
+            studentId: { ...a.studentId, _id: a.studentId.id },
+            quizId: { ...a.quizId, _id: a.quizId.id }
+        })) || [];
 
         res.json({
             stats: {
-                totalStudents,
-                totalQuizzes,
-                totalAttempts,
+                totalStudents: totalStudents || 0,
+                totalQuizzes: totalQuizzes || 0,
+                totalAttempts: totalAttempts || 0,
                 passRate: Math.round(passRate)
             },
             quizStats,
@@ -64,22 +68,29 @@ const getDashboardStats = async (req, res) => {
 };
 
 // @desc    Get all students
-// @route   GET /api/admin/users
-// @access  Private/Admin
 const getAllStudents = async (req, res) => {
     try {
-        const students = await User.find({ role: 'student' }).select('-password');
+        const { data: students, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('role', 'student');
         
-        // Enhance with attempt counts and avg scores
+        if (error) throw error;
+
         const enhancedStudents = await Promise.all(students.map(async (student) => {
-            const attempts = await QuizAttempt.find({ studentId: student._id });
-            const avgScore = attempts.length > 0 
+            const { data: attempts } = await supabase
+                .from('quiz_attempts')
+                .select('percentage')
+                .eq('studentId', student.id);
+
+            const avgScore = (attempts && attempts.length > 0) 
                 ? attempts.reduce((acc, curr) => acc + curr.percentage, 0) / attempts.length 
                 : 0;
             
             return {
-                ...student._doc,
-                totalAttempts: attempts.length,
+                ...student,
+                _id: student.id, // For frontend compatibility
+                totalAttempts: attempts ? attempts.length : 0,
                 averageScore: Math.round(avgScore)
             };
         }));
@@ -91,38 +102,39 @@ const getAllStudents = async (req, res) => {
 };
 
 // @desc    Delete student
-// @route   DELETE /api/admin/users/:id
-// @access  Private/Admin
 const deleteStudent = async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
-        if (user) {
-            await User.deleteOne({ _id: req.params.id });
-            // Optionally delete their attempts too
-            await QuizAttempt.deleteMany({ studentId: req.params.id });
-            res.json({ message: 'User and all associated data deleted' });
-        } else {
-            res.status(404).json({ message: 'User not found' });
-        }
+        const { error: attemptError } = await supabase.from('quiz_attempts').delete().eq('studentId', req.params.id);
+        const { error: userError } = await supabase.from('users').delete().eq('id', req.params.id);
+        
+        if (userError) throw userError;
+        res.json({ message: 'User and all associated data deleted' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc    Get all quiz attempts (global history)
-// @route   GET /api/admin/history
-// @access  Private/Admin
+// @desc    Get all quiz attempts
 const getAllAttempts = async (req, res) => {
     try {
         const limitRes = req.query.limit;
-        const limitValue = (limitRes && limitRes !== 'all') ? parseInt(limitRes) : 0;
+        const limitValue = (limitRes && limitRes !== 'all') ? parseInt(limitRes) : 1000;
 
-        const attempts = await QuizAttempt.find({})
-            .populate('studentId', 'name email')
-            .populate('quizId', 'title')
-            .sort({ percentage: -1, timeTaken: 1, submittedAt: -1 })
+        const { data: attemptsRaw, error } = await supabase
+            .from('quiz_attempts')
+            .select('*, studentId:users(id, name, email), quizId:quizzes(id, title)')
+            .order('submittedAt', { ascending: false })
             .limit(limitValue);
             
+        if (error) throw error;
+
+        const attempts = attemptsRaw?.map(a => ({
+            ...a,
+            _id: a.id,
+            studentId: { ...a.studentId, _id: a.studentId.id },
+            quizId: { ...a.quizId, _id: a.quizId.id }
+        })) || [];
+
         res.json(attempts);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -130,59 +142,55 @@ const getAllAttempts = async (req, res) => {
 };
 
 // @desc    Update student details
-// @route   PUT /api/admin/users/:id
-// @access  Private/Admin
 const updateStudent = async (req, res) => {
     try {
-        const student = await User.findById(req.params.id);
-        if (!student) {
-            return res.status(404).json({ message: 'Student not found' });
-        }
+        const updates = {
+            name: req.body.name,
+            email: req.body.email,
+            collegeId: req.body.collegeId,
+            collegeName: req.body.collegeName,
+            branch: req.body.branch,
+            year: req.body.year
+        };
 
-        // Update fields
-        student.name = req.body.name || student.name;
-        student.email = req.body.email || student.email;
-        student.collegeId = req.body.collegeId || student.collegeId;
-        student.collegeName = req.body.collegeName || student.collegeName;
-        student.branch = req.body.branch || student.branch;
-        student.year = req.body.year || student.year;
+        const { data: updatedStudent, error } = await supabase
+            .from('users')
+            .update(updates)
+            .eq('id', req.params.id)
+            .select()
+            .single();
 
-        const updatedStudent = await student.save();
+        if (error) throw error;
         
-        // Trigger In-App Notification via Unified Service
-        await notify(
-            student._id, 
-            'info', 
-            'Profile Updated', 
-            'An administrator has updated your profile details.'
-        );
-
+        await notify(req.params.id, 'info', 'Profile Updated', 'An administrator has updated your profile details.');
         res.json(updatedStudent);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc    Get detailed student profile and history
-// @route   GET /api/admin/student/:id
-// @access  Private/Admin
 const getStudentDetail = async (req, res) => {
     try {
-        const student = await User.findById(req.params.id).select('-password');
-        if (!student) {
-            return res.status(404).json({ message: 'Student not found' });
-        }
+        const { data: student } = await supabase.from('users').select('*').eq('id', req.params.id).single();
+        if (!student) return res.status(404).json({ message: 'Student not found' });
 
-        const history = await QuizAttempt.find({ studentId: student._id })
-            .populate('quizId', 'title language')
-            .sort({ submittedAt: -1 });
+        const { data: historyRaw } = await supabase
+            .from('quiz_attempts')
+            .select('*, quizId:quizzes(id, title, language)')
+            .eq('studentId', student.id)
+            .order('submittedAt', { ascending: false });
 
-        // Calculate performance metrics
-        const totalAttempts = history.length;
+        const history = historyRaw?.map(h => ({
+            ...h,
+            _id: h.id,
+            quizId: { ...h.quizId, _id: h.quizId.id }
+        })) || [];
+
+        const totalAttempts = history ? history.length : 0;
         const avgScore = totalAttempts > 0 
             ? history.reduce((acc, curr) => acc + curr.percentage, 0) / totalAttempts 
             : 0;
-        const passRank = history.filter(h => h.status === 'pass').length;
+        const passRank = history ? history.filter(h => h.status === 'pass').length : 0;
 
         res.json({
             student,

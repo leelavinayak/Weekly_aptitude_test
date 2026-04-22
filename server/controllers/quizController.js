@@ -1,12 +1,9 @@
-const Quiz = require('../models/Quiz');
-const QuizAttempt = require('../models/QuizAttempt');
+const supabase = require('../config/supabase');
 const { generateQuizQuestions } = require('../services/quizGenerator');
 const { notifyAllStudents } = require('../services/notificationService');
 const templates = require('../utils/emailTemplates');
 
 // @desc    Generate quiz questions via AI
-// @route   POST /api/admin/quiz/generate
-// @access  Private/Admin
 const generateAIQuestions = async (req, res) => {
     const { language, numQuestions, difficulty } = req.body;
     try {
@@ -17,43 +14,38 @@ const generateAIQuestions = async (req, res) => {
         res.json(questions);
     } catch (error) {
         console.error('Quiz Generation Error:', error.message);
-
         let status = 500;
         let message = error.message;
-
         if (message.includes('API_KEY')) {
-            message = 'AI Service is currently unavailable. Please check your API configuration.';
+            message = 'AI Service is currently unavailable.';
             status = 401;
-        } else if (message.includes('safety')) {
-            message = 'The requested topic was restricted by AI safety policies. Please try a different subject.';
-            status = 400;
-        } else if (message.includes('format')) {
-            message = 'The AI encountered a layout error. Try being more specific with your topic.';
-            status = 422;
         }
-
         res.status(status).json({ message });
     }
 };
 
 // @desc    Upload/Create a new quiz
-// @route   POST /api/admin/quiz/upload
-// @access  Private/Admin
 const createQuiz = async (req, res) => {
     try {
         const { title, language, questions, duration, scheduledAt, endTime, passingScore } = req.body;
 
-        const quiz = await Quiz.create({
-            title,
-            language,
-            questions,
-            duration,
-            scheduledAt: scheduledAt || null,
-            endTime: endTime || null,
-            isLive: scheduledAt ? false : true,
-            passingScore,
-            createdBy: req.user._id
-        });
+        const { data: quiz, error } = await supabase
+            .from('quizzes')
+            .insert([{
+                title,
+                language,
+                questions,
+                duration,
+                scheduledAt: scheduledAt || null,
+                endTime: endTime || null,
+                isLive: scheduledAt ? false : true,
+                passingScore,
+                createdBy: req.user.id
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
 
         // Notify All Students
         notifyAllStudents(
@@ -69,11 +61,15 @@ const createQuiz = async (req, res) => {
 };
 
 // @desc    Get all quizzes (for admin)
-// @route   GET /api/admin/quizzes
-// @access  Private/Admin
 const getAdminQuizzes = async (req, res) => {
     try {
-        const quizzes = await Quiz.find({ createdBy: req.user._id }).sort({ createdAt: -1 });
+        const { data: quizzes, error } = await supabase
+            .from('quizzes')
+            .select('*')
+            .eq('createdBy', req.user.id)
+            .order('createdAt', { ascending: false });
+        
+        if (error) throw error;
         res.json(quizzes);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -81,40 +77,41 @@ const getAdminQuizzes = async (req, res) => {
 };
 
 // @desc    Get available quizzes for students
-// @route   GET /api/student/quizzes
-// @access  Private/Student
 const getStudentQuizzes = async (req, res) => {
     try {
-        const now = new Date();
+        const now = new Date().toISOString();
+        
         // Quizzes that are active within their time window
-        const quizzes = await Quiz.find({
-            $and: [
-                {
-                    $or: [
-                        { isLive: true },
-                        { scheduledAt: { $lte: now } },
-                        { scheduledAt: null }
-                    ]
-                },
-                {
-                    $or: [
-                        { endTime: { $gte: now } },
-                        { endTime: null }
-                    ]
-                }
-            ]
-        }).sort({ scheduledAt: -1, createdAt: -1 });
+        const { data: quizzes, error } = await supabase
+            .from('quizzes')
+            .select('*')
+            .or(`isLive.eq.true,scheduledAt.lte.${now},scheduledAt.is.null`)
+            .or(`endTime.gte.${now},endTime.is.null`)
+            .order('createdAt', { ascending: false });
+
+        if (error) throw error;
 
         // Filter and add attempt status
         const enhancedQuizzes = await Promise.all(quizzes.map(async (quiz) => {
-            const attempt = await QuizAttempt.findOne({
-                studentId: req.user._id,
-                quizId: quiz._id
-            });
+            const { data: attempt } = await supabase
+                .from('quiz_attempts')
+                .select('id')
+                .eq('studentId', req.user.id)
+                .eq('quizId', quiz.id)
+                .single();
+
+            // Ensure questions have _id for frontend compatibility
+            const questionsWithId = quiz.questions?.map((q, idx) => ({
+                ...q,
+                _id: q._id || idx.toString()
+            })) || [];
+
             return {
-                ...quiz._doc,
+                ...quiz,
+                _id: quiz.id,
+                questions: questionsWithId,
                 isAttempted: !!attempt,
-                attemptId: attempt ? attempt._id : null
+                attemptId: attempt ? attempt.id : null
             };
         }));
 

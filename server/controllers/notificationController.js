@@ -1,47 +1,56 @@
-const Notification = require('../models/Notification');
+const supabase = require('../config/supabase');
 
 // @desc    Get user notifications
-// @route   GET /api/notifications
-// @access  Private
 const getNotifications = async (req, res) => {
     try {
-        const notifications = await Notification.find({ userId: req.user._id }).sort({ createdAt: -1 });
-        res.json(notifications);
+        const { data: notifications, error } = await supabase
+            .from('notifications')
+            .select('*')
+            .eq('userId', req.user.id)
+            .order('createdAt', { ascending: false });
+        
+        if (error) throw error;
+        
+        const mappedNotifications = notifications?.map(n => ({
+            ...n,
+            _id: n.id
+        })) || [];
+        
+        res.json(mappedNotifications);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
 // @desc    Mark notification as read
-// @route   PUT /api/notifications/:id/read
-// @access  Private
 const markAsRead = async (req, res) => {
     try {
-        const notification = await Notification.findById(req.params.id);
-        if (notification) {
-            notification.isRead = true;
-            await notification.save();
-            res.json({ message: 'Notification marked as read' });
-        } else {
-            res.status(404).json({ message: 'Notification not found' });
-        }
+        const { error } = await supabase
+            .from('notifications')
+            .update({ isRead: true })
+            .eq('id', req.params.id);
+
+        if (error) throw error;
+        res.json({ message: 'Notification marked as read' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
 // @desc    Delete notification
-// @route   DELETE /api/notifications/:id
-// @access  Private
 const deleteNotification = async (req, res) => {
     try {
-        const notification = await Notification.findById(req.params.id);
+        const { data: notification } = await supabase
+            .from('notifications')
+            .select('userId')
+            .eq('id', req.params.id)
+            .single();
+
         if (notification) {
-            // Check ownership
-            if (notification.userId.toString() !== req.user._id.toString()) {
+            if (notification.userId !== req.user.id) {
                 return res.status(403).json({ message: 'Not authorized' });
             }
-            await notification.deleteOne();
+            await supabase.from('notifications').delete().eq('id', req.params.id);
             res.json({ message: 'Notification deleted' });
         } else {
             res.status(404).json({ message: 'Notification not found' });
