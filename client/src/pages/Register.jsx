@@ -135,7 +135,7 @@ const Register = () => {
                                                 type="text"
                                                 required
                                                 className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 focus:bg-white transition-all font-medium text-slate-700"
-                                                placeholder="John Doe"
+                                                placeholder="Enter student name"
                                                 value={formData.name}
                                                 onChange={handleChange}
                                             />
@@ -153,7 +153,7 @@ const Register = () => {
                                                 type="email"
                                                 required
                                                 className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 focus:bg-white transition-all font-medium text-slate-700"
-                                                placeholder="john@example.com"
+                                                placeholder="210M1A0537@vemu.org"
                                                 value={formData.email}
                                                 onChange={handleChange}
                                             />
@@ -242,7 +242,7 @@ const Register = () => {
                                                 type="text"
                                                 required
                                                 className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 focus:bg-white transition-all font-medium text-slate-700"
-                                                placeholder="e.g. Stanford University"
+                                                placeholder="Enter your Institute Name"
                                                 value={formData.collegeName}
                                                 onChange={handleChange}
                                             />
@@ -256,7 +256,7 @@ const Register = () => {
                                             type="text"
                                             required
                                             className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 focus:bg-white transition-all font-medium text-slate-700"
-                                            placeholder="SC-12345"
+                                            placeholder="210M1A0537"
                                             value={formData.collegeId}
                                             onChange={handleChange}
                                         />
@@ -272,10 +272,10 @@ const Register = () => {
                                             onChange={handleChange}
                                         >
                                             <option value="">Select Year</option>
-                                            <option value="1st Year">Foundational (1st)</option>
-                                            <option value="2nd Year">Intermediate (2nd)</option>
-                                            <option value="3rd Year">Advanced (3rd)</option>
-                                            <option value="4th Year">Professional (4th)</option>
+                                            <option value="1st Year">1st year</option>
+                                            <option value="2nd Year">2nd year</option>
+                                            <option value="3rd Year">3rd year</option>
+                                            <option value="4th Year">4th year</option>
                                         </select>
                                     </div>
 

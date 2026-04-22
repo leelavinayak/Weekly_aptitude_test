@@ -141,7 +141,7 @@ const Profile = () => {
                                 className={inputClass(!isEditing)}
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                placeholder="email@example.com"
+                                placeholder="210M1A0537@vemu.org"
                                 disabled={!isEditing}
                             />
                         </div>
@@ -165,7 +165,7 @@ const Profile = () => {
                                 className={inputClass(!isEditing)}
                                 value={formData.collegeId}
                                 onChange={(e) => setFormData({ ...formData, collegeId: e.target.value })}
-                                placeholder="SC-123456"
+                                placeholder="210M1A0537"
                                 disabled={!isEditing}
                             />
                         </div>

@@ -171,16 +171,17 @@ const Footer = () => {
                 <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
                     <div className="flex items-center space-x-4">
                         <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest leading-relaxed">
-                            © 2026 QuizCraft Enterprise. All internal protocols active.
+                            © 2026 Developed by Programmers Club, Vemu Institute Of Technology
+                            {/* © 2026 QuizCraft Enterprise. All internal protocols active. */}
                         </p>
                     </div>
-                    <div className="flex items-center space-x-8">
+                    {/* <div className="flex items-center space-x-8">
                         {['Privacy Polices', 'Compliance', 'Terms of Service'].map((link) => (
                             <span key={link} className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] hover:text-blue-500 cursor-pointer transition-colors px-2 py-1">
                                 {link}
                             </span>
                         ))}
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </footer>

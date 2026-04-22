@@ -79,7 +79,7 @@ const Login = () => {
                                     type="email"
                                     required
                                     className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 focus:bg-white transition-all font-medium text-slate-700 placeholder:text-slate-300"
-                                    placeholder="name@institution.com"
+                                    placeholder="210M1A0537@vemu.org"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
