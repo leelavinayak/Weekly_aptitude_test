@@ -76,8 +76,8 @@ if (process.env.NODE_ENV === 'production') {
 
     // Serve index.html for any non-API routes (SPA fallback)
     // We only serve index.html for routes that don't look like files (no dot in path)
-    console.log('Starting server with Express 5 catch-all fix (/:path(.*))...');
-    app.get('/:path(.*)', (req, res, next) => {
+    console.log('--- DEPLOYMENT VERIFICATION: EXPRESS 5 REGEX FIX v4 ---');
+    app.get(/.*/, (req, res, next) => {
         if (!req.path.startsWith('/api') && !req.path.includes('.')) {
             res.sendFile(path.join(clientPath, 'index.html'));
         } else {
