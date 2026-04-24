@@ -398,18 +398,18 @@ const AddQuiz = () => {
                                         />
                                     </div>
                                     
-                                    {creationMode === 'ai' ? (
-                                        <div>
-                                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Core Topic / Language</label>
-                                            <input
-                                                type="text"
-                                                className="input-field"
-                                                placeholder="e.g. Python Programming, AWS Cloud, etc."
-                                                value={quizData.language}
-                                                onChange={(e) => setQuizData({ ...quizData, language: e.target.value })}
-                                            />
-                                        </div>
-                                    ) : (
+                                    <div>
+                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Core Topic / Subject</label>
+                                        <input
+                                            type="text"
+                                            className="input-field"
+                                            placeholder="e.g. Python Programming, AWS Cloud, etc."
+                                            value={quizData.language}
+                                            onChange={(e) => setQuizData({ ...quizData, language: e.target.value })}
+                                        />
+                                    </div>
+
+                                    {creationMode === 'pdf' && (
                                         <div>
                                             <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Upload PDF Source</label>
                                             <div className="relative">

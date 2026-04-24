@@ -152,7 +152,7 @@ const getResultDetail = async (req, res) => {
     try {
         const { data: result, error } = await supabase
             .from('quiz_attempts')
-            .select('*, quiz:quizzes(id, title, language, questions), student:users(id, name, email)')
+            .select('*, quiz:quizzes(id, title, language, questions, targetYears, targetBranches, targetSections), student:users(id, name, email)')
             .eq('id', req.params.id)
             .single();
 

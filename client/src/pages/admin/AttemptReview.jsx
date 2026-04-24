@@ -68,15 +68,43 @@ const AttemptReview = () => {
                         <div className="w-14 h-14 md:w-20 md:h-20 bg-white/10 rounded-2xl md:rounded-3xl flex items-center justify-center backdrop-blur-md shrink-0">
                             <UserCircle size={32} className="text-blue-400 md:size-12" />
                         </div>
-                        <div className="overflow-hidden">
+                        <div className="overflow-hidden flex flex-col items-start">
                             <h1 className="text-2xl md:text-3xl font-black tracking-tight truncate">{studentId?.name || 'Student'}</h1>
-                            <p className="text-slate-400 font-bold text-xs md:text-base truncate">Assessment: <span className="text-white">{quizId?.title || 'Unknown Quiz'}</span></p>
+                            <p className="text-slate-400 font-bold text-xs md:text-base truncate mb-3">Assessment: <span className="text-white">{quizId?.title || 'Unknown Quiz'}</span></p>
+                            {studentId?._id && (
+                                <button 
+                                    onClick={() => navigate(`/admin/student/${studentId._id}`)}
+                                    className="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors flex items-center"
+                                >
+                                    <Trophy size={12} className="mr-2" /> View Performance History
+                                </button>
+                            )}
                         </div>
                     </div>
                     <div className="bg-white/10 px-8 py-4 rounded-[2rem] backdrop-blur-md border border-white/10">
                         <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1">Pass Status</p>
                         <p className={`text-2xl font-black uppercase ${isPass ? 'text-green-400' : 'text-red-400'}`}>{status}</p>
                     </div>
+                </div>
+            </div>
+
+            {/* Quiz Context Bar */}
+            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-8 md:mb-12 flex flex-wrap items-center gap-4 text-[10px] font-black uppercase tracking-widest text-blue-800">
+                <div className="flex items-center bg-white px-3 py-1.5 rounded-lg shadow-sm border border-blue-50">
+                    <span className="text-blue-400 mr-2">Topic:</span>
+                    {quizId?.language || 'General'}
+                </div>
+                <div className="flex items-center bg-white px-3 py-1.5 rounded-lg shadow-sm border border-blue-50">
+                    <span className="text-blue-400 mr-2">Years:</span>
+                    {quizId?.targetYears?.length > 0 ? quizId.targetYears.join(', ') : 'All Years'}
+                </div>
+                <div className="flex items-center bg-white px-3 py-1.5 rounded-lg shadow-sm border border-blue-50">
+                    <span className="text-blue-400 mr-2">Branches:</span>
+                    {quizId?.targetBranches?.length > 0 ? quizId.targetBranches.join(', ') : 'All Branches'}
+                </div>
+                <div className="flex items-center bg-white px-3 py-1.5 rounded-lg shadow-sm border border-blue-50">
+                    <span className="text-blue-400 mr-2">Sections:</span>
+                    {quizId?.targetSections?.length > 0 ? quizId.targetSections.join(', ') : 'All Sections'}
                 </div>
             </div>
 
@@ -106,7 +134,7 @@ const AttemptReview = () => {
             <div className="space-y-6 md:space-y-8">
                 {(quizId?.questions || []).map((q, i) => {
                     const qId = q._id || q.id || i.toString();
-                    const studentAnswerObj = (answers || []).find(a => 
+                    const studentAnswerObj = (answers || []).find(a =>
                         (a.questionId && a.questionId.toString() === qId.toString()) ||
                         (a.id && a.id.toString() === qId.toString())
                     );

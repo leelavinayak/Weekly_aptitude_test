@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import {
     FileText,
@@ -21,6 +22,7 @@ import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 
 const QuizReports = () => {
+    const navigate = useNavigate();
     const [quizzes, setQuizzes] = useState([]);
     const [selectedQuiz, setSelectedQuiz] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -314,7 +316,10 @@ const QuizReports = () => {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-6">
-                                                <div className="flex items-center space-x-4">
+                                                <div 
+                                                    className="flex items-center space-x-4 cursor-pointer"
+                                                    onClick={() => navigate(`/admin/review-attempt/${attempt._id || attempt.id}`)}
+                                                >
                                                     <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black text-lg shadow-lg group-hover:bg-blue-600 transition-colors">
                                                         {attempt.studentId?.name?.charAt(0)}
                                                     </div>
@@ -368,12 +373,15 @@ const QuizReports = () => {
                                 .map((attempt, idx) => (
                                     <div key={attempt.id} className="p-6 space-y-6">
                                         <div className="flex items-center justify-between">
-                                            <div className="flex items-center space-x-4">
-                                                <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-sm">
+                                            <div 
+                                                className="flex items-center space-x-4 cursor-pointer"
+                                                onClick={() => navigate(`/admin/review-attempt/${attempt._id || attempt.id}`)}
+                                            >
+                                                <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-sm group-hover:bg-blue-600 transition-colors">
                                                     #{idx + 1}
                                                 </div>
                                                 <div>
-                                                    <p className="font-black text-slate-800 uppercase text-[10px] tracking-widest">{attempt.studentId?.name}</p>
+                                                    <p className="font-black text-slate-800 uppercase text-[10px] tracking-widest group-hover:text-blue-600 transition-colors">{attempt.studentId?.name}</p>
                                                     <p className="text-[10px] font-bold text-slate-400">{attempt.studentId?.collegeId}</p>
                                                 </div>
                                             </div>
