@@ -135,10 +135,10 @@ const Footer = () => {
                             </a>
                         </div>
                         <div className="flex items-center space-x-4">
-                            <a href="https://instagram.com/vemuitchittoor" target="_blank" rel="noreferrer" className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white transition-all transform hover:-translate-y-1 border border-white/5 hover:border-blue-400/30 group" title="Instagram">
+                            <a href="https://www.instagram.com/pc_vemu_2k26?igsh=a3I2eXFiazY1NGx1" target="_blank" rel="noreferrer" className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white transition-all transform hover:-translate-y-1 border border-white/5 hover:border-blue-400/30 group" title="Instagram">
                                 <InstagramIcon size={22} className="group-hover:scale-110 transition-transform" />
                             </a>
-                            <a href="#" target="_blank" rel="noreferrer" className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white transition-all transform hover:-translate-y-1 border border-white/5 hover:border-blue-400/30 group" title="LinkedIn">
+                            <a href="https://www.linkedin.com/in/programmers-club-1929b3403" target="_blank" rel="noreferrer" className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white transition-all transform hover:-translate-y-1 border border-white/5 hover:border-blue-400/30 group" title="LinkedIn">
                                 <LinkedInIcon size={22} className="group-hover:scale-110 transition-transform" />
                             </a>
                             {/* <a href="https://vemu.org" target="_blank" rel="noreferrer" className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white transition-all transform hover:-translate-y-1 border border-white/5 hover:border-blue-400/30 group" title="Website">

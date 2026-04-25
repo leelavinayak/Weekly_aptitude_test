@@ -74,7 +74,7 @@ const Landing = () => {
                         <div className="flex-1 text-center lg:text-left space-y-8">
                             <div className="inline-flex items-center space-x-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest animate-fade-in">
                                 <Zap size={14} />
-                                <span>Platform v3.0 is Live</span>
+                                <span>Developed by Programmers club</span>
                             </div>
                             <h1 className="text-6xl md:text-8xl font-black text-slate-900 leading-[0.9] tracking-tighter animate-slide-right">
                                 Assessments <br />
