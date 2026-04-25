@@ -173,11 +173,29 @@ const QuizReports = () => {
                                         </div>
                                         <ChevronRight className="text-slate-200 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" size={20} />
                                     </div>
-                                    <h3 className="text-lg md:text-xl font-black text-slate-800 mb-2 leading-tight group-hover:text-blue-600 transition-colors">{quiz.title}</h3>
-                                    <div className="flex items-center space-x-2 mb-6">
-                                        <span className="bg-slate-100 text-slate-500 px-2 py-0.5 md:px-3 md:py-1 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest">{quiz.language}</span>
-                                        <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">•</span>
-                                        <span className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">{new Date(quiz.createdAt).toLocaleDateString()}</span>
+                                    <h3 className="text-lg md:text-xl font-black text-slate-800 mb-4 leading-tight group-hover:text-blue-600 transition-colors">{quiz.title}</h3>
+                                    
+                                    <div className="space-y-3 mb-6">
+                                        <div className="flex flex-wrap gap-2">
+                                            <span className="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-blue-100/50 flex items-center">
+                                                <GraduationCap size={12} className="mr-1.5" />
+                                                {quiz.targetYears?.length > 0 ? quiz.targetYears.join(', ') : 'All Years'}
+                                            </span>
+                                            <span className="bg-slate-50 text-slate-500 px-2.5 py-1 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-slate-100 flex items-center">
+                                                <School size={12} className="mr-1.5" />
+                                                {quiz.targetBranches?.length > 0 ? quiz.targetBranches.join(', ') : 'All Branches'}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center space-x-3">
+                                            <span className="bg-amber-50 text-amber-600 px-2.5 py-1 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-amber-100/50">
+                                                SEC: {quiz.targetSections?.length > 0 ? quiz.targetSections.join(', ') : 'All'}
+                                            </span>
+                                            <span className="text-[9px] font-black text-slate-200 uppercase tracking-widest">•</span>
+                                            <span className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center">
+                                                <Calendar size={12} className="mr-1.5" />
+                                                {new Date(quiz.createdAt).toLocaleDateString()}
+                                            </span>
+                                        </div>
                                     </div>
                                     <div className="pt-4 md:pt-6 border-t border-slate-50 flex items-center justify-between">
                                         <div className="flex items-center space-x-2">

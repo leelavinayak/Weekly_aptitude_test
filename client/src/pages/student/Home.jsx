@@ -62,7 +62,24 @@ const StudentHome = () => {
                             <span className="bg-white/20 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest backdrop-blur-md border border-white/20">
                                 {quiz.language}
                             </span>
-                            <h3 className="text-2xl font-black text-white mt-6 leading-tight">{quiz.title}</h3>
+                             <h3 className="text-2xl font-black text-white mt-6 leading-tight mb-4">{quiz.title}</h3>
+                             <div className="flex flex-wrap gap-2">
+                                {quiz.targetYears?.length > 0 && (
+                                    <span className="bg-white/20 text-white px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest backdrop-blur-md border border-white/20">
+                                        Year: {quiz.targetYears.join(', ')}
+                                    </span>
+                                )}
+                                {quiz.targetBranches?.length > 0 && (
+                                    <span className="bg-white/20 text-white px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest backdrop-blur-md border border-white/20">
+                                        Dept: {quiz.targetBranches.join(', ')}
+                                    </span>
+                                )}
+                                {quiz.targetSections?.length > 0 && (
+                                    <span className="bg-white/20 text-white px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest backdrop-blur-md border border-white/20">
+                                        Sec: {quiz.targetSections.join(', ')}
+                                    </span>
+                                )}
+                             </div>
                         </div>
 
                         <div className="p-8 flex-1 flex flex-col justify-between">

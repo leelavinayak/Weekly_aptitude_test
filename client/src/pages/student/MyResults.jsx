@@ -15,12 +15,13 @@ import { useNavigate } from 'react-router-dom';
 const MyResults = () => {
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [limit, setLimit] = useState('10');
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchResults = async () => {
             try {
-                const { data } = await api.get('/student/results');
+                const { data } = await api.get(`/student/results?limit=${limit}`);
                 setResults(data);
             } catch (err) {
                 console.error('Failed to fetch results', err);
@@ -29,7 +30,7 @@ const MyResults = () => {
             }
         };
         fetchResults();
-    }, []);
+    }, [limit]);
 
     if (loading) return (
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -53,14 +54,23 @@ const MyResults = () => {
                     <p className="text-slate-500 mt-2 text-lg">Detailed log of your academic certifications and scores.</p>
                 </div>
                 
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center space-x-3 bg-blue-50 px-4 py-2.5 rounded-2xl border border-blue-100">
+                <div className="flex flex-col md:flex-row items-center gap-4">
+                    <div className="bg-white px-6 py-2 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-3">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Show:</span>
+                        <select
+                            value={limit}
+                            onChange={(e) => setLimit(e.target.value)}
+                            className="bg-transparent border-none font-black text-blue-600 focus:ring-0 text-xs cursor-pointer"
+                        >
+                            <option value="10">Latest 10</option>
+                            <option value="50">Latest 50</option>
+                            <option value="100">Latest 100</option>
+                            <option value="all">View All</option>
+                        </select>
+                    </div>
+                    <div className="flex items-center space-x-3 bg-blue-50 px-4 py-2.5 rounded-2xl border border-blue-100 h-full">
                         <Award size={18} className="text-blue-600" />
                         <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none">{passCount} Passed</span>
-                    </div>
-                    <div className="flex items-center space-x-3 bg-slate-50 px-4 py-2.5 rounded-2xl border border-slate-100">
-                        <Filter size={18} className="text-slate-400" />
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{totalAttempts} Total</span>
                     </div>
                 </div>
             </div>

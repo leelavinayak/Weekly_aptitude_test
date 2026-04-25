@@ -54,21 +54,19 @@ const MyHistory = () => {
                     <p className="text-slate-500 mt-4 text-lg font-medium">Track your academic journey and quiz results.</p>
                 </div>
                 <div className="flex flex-col md:flex-row items-center gap-4">
-                    {user.role === 'admin' && (
-                        <div className="bg-white px-6 py-2 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-3">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Limit:</span>
-                            <select
-                                value={limit}
-                                onChange={(e) => setLimit(e.target.value)}
-                                className="bg-transparent border-none font-black text-blue-600 focus:ring-0 text-xs cursor-pointer"
-                            >
-                                <option value="10">10 History</option>
-                                <option value="30">30 Records</option>
-                                <option value="100">100 Entries</option>
-                                <option value="all">View All</option>
-                            </select>
-                        </div>
-                    )}
+                    <div className="bg-white px-6 py-2 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-3">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">History:</span>
+                        <select
+                            value={limit}
+                            onChange={(e) => setLimit(e.target.value)}
+                            className="bg-transparent border-none font-black text-blue-600 focus:ring-0 text-xs cursor-pointer"
+                        >
+                            <option value="10">Latest 10</option>
+                            <option value="50">Latest 50</option>
+                            <option value="100">Latest 100</option>
+                            <option value="all">View All</option>
+                        </select>
+                    </div>
                     <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-3">
                         <Trophy className="text-amber-500" size={20} />
                         <div className="text-right">

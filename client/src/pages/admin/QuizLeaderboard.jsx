@@ -84,7 +84,7 @@ const QuizLeaderboard = () => {
                             Participation Audit
                         </div>
                         <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-4">{quiz?.title}</h1>
-                        <div className="flex flex-wrap gap-6 items-center justify-center md:justify-start">
+                         <div className="flex flex-wrap gap-4 items-center justify-center md:justify-start">
                             <div className="flex items-center space-x-2 bg-slate-50 px-4 py-2 rounded-xl">
                                 <BookOpen className="text-blue-600" size={18} />
                                 <span className="font-black text-slate-700 uppercase text-[10px] tracking-widest">{quiz?.language}</span>
@@ -93,6 +93,23 @@ const QuizLeaderboard = () => {
                                 <User className="text-blue-600" size={18} />
                                 <span className="font-black text-slate-700 uppercase text-[10px] tracking-widest">{leaderboard.length} Participants</span>
                             </div>
+                            {quiz?.targetYears?.length > 0 && (
+                                <div className="flex items-center space-x-2 bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">
+                                    <GraduationCap className="text-blue-600" size={18} />
+                                    <span className="font-black text-blue-700 uppercase text-[10px] tracking-widest">Years: {quiz.targetYears.join(', ')}</span>
+                                </div>
+                            )}
+                            {quiz?.targetBranches?.length > 0 && (
+                                <div className="flex items-center space-x-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+                                    <School className="text-slate-600" size={18} />
+                                    <span className="font-black text-slate-600 uppercase text-[10px] tracking-widest">Dept: {quiz.targetBranches.join(', ')}</span>
+                                </div>
+                            )}
+                            {quiz?.targetSections?.length > 0 && (
+                                <div className="flex items-center space-x-2 bg-amber-50 px-4 py-2 rounded-xl border border-amber-100">
+                                    <span className="font-black text-amber-600 uppercase text-[10px] tracking-widest">Sections: {quiz.targetSections.join(', ')}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
 
